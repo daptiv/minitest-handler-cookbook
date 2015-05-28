@@ -15,7 +15,6 @@ end.run_action(:install)
 chef_gem 'minitest-chef-handler' do
   version node[:minitest][:chef_handler_gem_version]
   action :nothing
-  #source remote_str if remote_str
   # I won't pretend I understand WHY this works, but since the release of
   # Chef 11.8, this was causing errors related to the PUMA Gem
   # http://lists.opscode.com/sympa/arc/chef/2013-10/msg00592.html
