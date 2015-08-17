@@ -1,5 +1,20 @@
+# Use Travis's cointainer based infrastructure
 language: ruby
 rvm:
-  - 1.9.3
+- 2.1.1
+sudo: false
+cache: bundler
+addons:
+  apt:
+    sources:
+      - chef-stable-precise
+    packages:
+      - chefdk
+
+# Ensure we make ChefDK's Ruby the default
+before_script:
+  - eval "$(/opt/chefdk/bin/chef shell-init bash)"
+  - chef exec bundle install
 script:
-  - bundle exec rake test
+  - chef --version
+  - chef exec bundle exec rake test

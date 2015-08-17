@@ -25,22 +25,30 @@ module MinitestHandler
           next
         end
 
+        if matches_ignore?(recipe_name, cookbook_name)
+          ::Chef::Log.info('Not copying test files for recipe' \
+          " #{recipe_name} in cookbook #{cookbook_name} as it" \
+          " is not contained in #{node[:minitest][:ignore_recipes]}")
+          next
+        end
+
         test_rb_files = test_files(cookbook_name, recipe_name)
 
-        unless test_rb_files.empty?
-          # create the parent directory
-          dir = Chef::Resource::Directory.new(
-            "#{node[:minitest][:path]}/#{cookbook_name}", run_context)
-          dir.recursive(true)
-          dir.run_action(:create)
+        next if test_rb_files.empty?
 
-          support_files(cookbook_name).each do |support_file|
-            copy_file(cookbook_name, support_file)
-          end
-          test_files(cookbook_name, recipe_name).each do |test_file|
-            copy_file(cookbook_name, test_file)
-          end
+        # create the parent directory
+        dir = Chef::Resource::Directory.new(
+          "#{node[:minitest][:path]}/#{cookbook_name}", run_context)
+        dir.recursive(true)
+        dir.run_action(:create)
+
+        support_files(cookbook_name).each do |support_file|
+          copy_file(cookbook_name, support_file)
         end
+        test_files(cookbook_name, recipe_name).each do |test_file|
+          copy_file(cookbook_name, test_file)
+        end
+
       end
 
       # Try to help the user out and let them know if they have
@@ -92,6 +100,15 @@ module MinitestHandler
       end
       return true if full_name =~ filter
       false
+    end
+
+    # Compare a cookbook and recipe combination against
+    # node[:minitest][:ignore_recipes]
+    #
+    # @returns [Boolean]
+    def matches_ignore?(recipe_name, cookbook_name)
+      full_name = "#{cookbook_name}::#{recipe_name}"
+      node[:minitest][:ignore_recipes].include? full_name
     end
 
     # Collect a list of recipes that we care about
